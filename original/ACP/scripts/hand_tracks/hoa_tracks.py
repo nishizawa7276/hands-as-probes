@@ -211,7 +211,7 @@ def main(_):
         annotations = pd.read_csv(
             os.path.join(METADATA_PATH, f"EPIC_100_{split}.csv"))
         
-        test_s1 = pd.read_csv("/data01/mohit/InteractionHotspots/original_split/EPIC_test_s1_object_video_list.csv")
+        test_s1 = pd.read_csv("v")
         test_s2 = pd.read_csv("/data01/mohit/InteractionHotspots/original_split/EPIC_test_s2_object_video_list.csv")
         to_be_removed_videos = list(test_s1['video_id']) + list(test_s2['video_id'])
         all_videos = list(pd.read_csv("/data01/mohit/InteractionHotspots/original_split/EPIC_55_annotations.csv")['video_id']) + to_be_removed_videos

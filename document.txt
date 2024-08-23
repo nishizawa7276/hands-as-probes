@@ -2,6 +2,37 @@ git clone https://github.com/uiuc-robovision/hands-as-probes.git
 
 conda create -n humanhands python=3.8.8
 conda activate humanhands
+conda install cython==0.29.23
+conda install numpy==1.20.1
+conda install numpy=1.20.1 pandas=1.2.0
 conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cudatoolkit=11.1 -c pytorch -c conda-forge
+conda install pandas==1.5.2
+conda install scikit-learn==1.0.1
+conda install matplotlib==3.3.4
+conda install opencv-python==4.5.1.48
+
+pip install mmcv-full==1.3.16
+pip install nvgpu==0.9.0
 
 
+python extract_epicstates_json.py --data /home/knishizawa/EPIC-KITCHENS/P01/object_detection_images/P01_01/0000001621.jpg
+
+
+conda remove -n humanhands --all
+
+
+cd $GIT_ROOT/ACP/scripts/generate_metadata
+python generate_metadata.py --contact --det_path /home/knishizawa/hands-as-probes/v1/ACP/detections_partitioned --out_path /home/knishizawa/hands-as-probes/v1/ACP/datasets/
+tar -xf GUN71-crops.tar.gz -C /home/knishizawa/hands-as-probes/v1/ACP/datasets/
+cd $GIT_ROOT/ACP/scripts/hand_tracks
+python hoa_tracks.py --out_dir /home/knishizawa/hands-as-probes/v1/ACP/datasets/partitioned_tracks
+python generate_annotations.py --inp_dir /home/knishizawa/hands-as-probes/v1/ACP/datasets/partitioned_tracks_0.8_128
+python split_to_frames.py --in_dir /home/knishizawa/hands-as-probes/v1/ACP/datasets/partitioned_tracks_0.8_128
+
+# Will create output directory with by appending "_split" to INP_DIR
+
+CUDA_VISIBLE_DEVICES=0 python hand-grasp/train.py --tsc --config ./hand-grasp/configs/base_tsc.yaml  --name GUN71  --seed 0
+
+CUDA_VISIBLE_DEVICES=0 python src/inference_ROI.py --model_dir /home/knishizawa/hands-as-probes/v1/ACP/models/EPIC_KITCHENS --model_name SegNet_hands_seed0 --hand_cond True --split val/test  --ckpt 350  --out_dir ./out_dir/test --two_heads True
+
+CUDA_VISIBLE_DEVICES=0 python src/inference_affordances.py --model_dir /home/knishizawa/hands-as-probes/v1/ACP/models/EPIC_KITCHENS --model_name SegNet_hands_seed0 --ckpt_ROI 350 --ckpt_YCB 75 --two_heads True --inp_dir /home/knishizawa/EPIC-KITCHENS/P03/rgb_frames/P03_02  --out_dir /home/knishizawa/hands-as-probes/v1/ACP/inferred_IHdata/ACP_demo
